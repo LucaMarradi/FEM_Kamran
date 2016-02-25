@@ -19,13 +19,13 @@ using std::cout;
 Input::Input( Fem *fem ):
 narg( 0 )
 {
-	infile = fem->infile;	
-	line = new char[ MAXLINE ]; 
+	infile = fem->infile;
+	line = new char[ MAXLINE ];
 	copy = new char[ MAXLINE ];
-	allocate_memory();	
+	allocate_memory();
 	femObj = fem;
-	
 }
+
 // destructor
 Input::~Input()
 {
@@ -36,6 +36,10 @@ Input::~Input()
 /*-----------------------------------------------------------------
 read lammps script
 -------------------------------------------------------------------*/
+/**
+ * @brief Input::file
+ * @details
+ */
 void Input::file()
 {
 	int n;
@@ -60,15 +64,15 @@ void Input::dump()
 		femObj->dp->narg = new int[ MAXDUMP ];
 		femObj->dp->output = new char*[ MAXDUMP ];
 		femObj->dp->args = new char**[ MAXDUMP ];
-	}	 
+	}
 	femObj->dp->nDump++;
-	int dump_id = atoi( arg[ 0 ] );	
+	int dump_id = atoi( arg[ 0 ] );
 
 	femObj->dp->n[ dump_id ] = atoi( arg[ 1 ] ); //nevery
 
 	femObj->dp->output[ dump_id ] = new char[ MAXARGLEN ];
 	strcpy( femObj->dp->output[ dump_id ], arg[ 2 ] ); //output-file name
- 
+
 	// copy args
 	assert ( narg - 3 > 0 );
 	femObj->dp->narg[ dump_id ] = narg - 3;
@@ -188,7 +192,7 @@ void Input::parse()
 		{
 			*ptr = '\0';
 			break;
-		} 
+		}
 		ptr++;
 	}
 	// command = 1st arg
@@ -196,7 +200,7 @@ void Input::parse()
 	if( command == NULL )
 		return;
 	// next args
-	
+
 	narg = 0;
 	while( 1 )
 	{
@@ -220,7 +224,7 @@ void Input::allocate_memory()
 
 //int main()
 //{
-//	Fem *femobj = new Fem;	
+//	Fem *femobj = new Fem;
 //	Input *inputObj = new Input;//( femobj );
 //	inputObj->file();
 //	delete femobj;

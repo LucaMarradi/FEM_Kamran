@@ -9,7 +9,7 @@ using std::cout;
 Fem::Fem()
 {
 	infile = stdin;
-	logFile = stdout; //fopen( "log.fem", "w" );	
+	logFile = stdout; //fopen( "log.fem", "w" );
 	domain = new Domain();
 	node   = new Node();
 	srand( time( NULL ) );
@@ -27,28 +27,17 @@ Fem::Fem()
 	force  = new Force( this );
 	rs     = new Restart( this );
 	tr     = new Tracer( this );
-	cds     = new Compute_ds( this, fopen( "ds.xyz", "w" ) );
+	cds    = new Compute_ds( this, fopen( "ds.xyz", "w" ) );
 }
 
 Fem::~Fem()
 {
-	delete force;
-	delete node;
-	delete elem;
-	delete domain;
-	delete ts;
-	delete fd;
-	delete fv;
-	delete ff;
-	delete fvl;
-	delete qs;
-	delete run;
-	delete ths;
-	delete dp;
-	delete input;
-	delete rs;
-	delete tr;
-	delete cds;
+	delete force;  delete node;  delete elem;
+	delete domain; delete ts;    delete fd;
+	delete fv; 	   delete ff;    delete fvl;
+	delete qs;		 delete run;   delete ths;
+	delete dp;		 delete input; delete rs;
+	delete tr;     delete cds;
 //	fclose( logFile );
 }
 //------------------------------------------------------
@@ -57,40 +46,40 @@ Fem::~Fem()
 void Fem::Loop()
 {
 	unsigned int ntime = run->nstep;
-	unsigned int *counter = new unsigned int; //--- min. steps 
+	unsigned int *counter = new unsigned int; //--- min. steps
 	*counter = 0;
 	//--- computes nodal internal forces at x( n )
-	Init(); // initialize state variables			
+	Init(); // initialize state variables
 	if( fvl->fix_vel )
 		SetVeloc(); // set velocities for "wall" nodes
 	if( ff->fix_force )
-		SetForce(); // set velocities for "wall" nodes
+		SetForce(); // set Forces for "wall" nodes
 	// --- std output!
 	ths->Process( ts->itime0 );
 	// --- output data
 	for( int iDump = 0; iDump < dp->nDump; iDump++ )
 		dp->Process( 0, iDump );
 	for( int itime = 0; itime < ntime; itime++ ){ // time integration starts
-		if( ! fvl->fix_vel && ! ff->fix_force ) 
+		if( ! fvl->fix_vel && ! ff->fix_force )
 			ApplyHOMO(); // --- apply homogeneous deformation
 		while( Iterate( counter ) ) //--- q-st
 		{
 			Verlet( node->veloi, node->velot, ts->dt, ts->dt ); //output node->veloi, node->dldis: nonaffine piece
 		// --- computes nodal internal forces at x( n + 1 )
-			force->ComputeForce( *counter ); //--- if counter == 1-> update boundaries 
+			force->ComputeForce( *counter ); //--- if counter == 1-> update boundaries
 		// --- calculates v( n + 1 )
 			Verlet( node->velot, node->veloi, ts->dt, 0.0 ); //output node->velot
 			Switch(); //--- switch state variables
 		}
 		if( tr->msd ) //--- tracer particle
 		{
-			tr->TracerUpdate();// --- update tr->dispt ( use tr->tdisp ) 
+			tr->TracerUpdate();// --- update tr->dispt ( use tr->tdisp )
 			tr->UpdateCords(); //--- output tr->coord
 		}
 
 		if(  rs->n != 0 ) //--- write restart
 		{
-			if( ( itime + 1 ) % rs->n == 0 ) 
+			if( ( itime + 1 ) % rs->n == 0 )
 				rs->output( ts->itime0 + itime + 1 );
 		}
 		// --- std output!
@@ -101,7 +90,7 @@ void Fem::Loop()
 		for( int iDump = 0; iDump < dp->nDump; iDump++ ){
 			if( ( itime + 1 ) % dp->n[ iDump ] == 0 )
 				dp->Process( 0 + itime + 1, iDump );
-		}	
+		}
 		cds->getAvalanch();
 	} // end of time loop
 	delete counter;
@@ -122,10 +111,10 @@ bool Fem::Iterate( unsigned int *counter )
                 *counter = 0;
 		return 0;
 	}
-        //--- meet the min. criterion 
+        //--- meet the min. criterion
 	assert( qs->min );
         if( ( fnorm / node->nsvab < qs->ftol ) ||
-                ( *counter == 8 && fnorm / node->nsvab < 10.0 * qs->ftol ) ) //--- avoid further min. in the elastic regime (underdamped) 
+                ( *counter == 8 && fnorm / node->nsvab < 10.0 * qs->ftol ) ) //--- avoid further min. in the elastic regime (underdamped)
         {
                 *counter = 0;
                 return 0; //--- success
@@ -133,7 +122,7 @@ bool Fem::Iterate( unsigned int *counter )
         else
                 return 1;
 }
-//------------------------------------------------------ 
+//------------------------------------------------------
 void Fem::SetForce()
 {
         double y = 0.0;
@@ -175,9 +164,9 @@ void Fem::SetForce()
         }
 }
 //------------------------------------------------------
-void Fem::SetVeloc() 
-{                       
-        double y = 0.0;        
+void Fem::SetVeloc()
+{
+        double y = 0.0;
         unsigned int isvab = 0, count = 0;
         for( int ipoin = 0; ipoin < node->npoin; ipoin++ )
         {
@@ -231,7 +220,7 @@ void Fem::Init()
 			isvab++;
 		}
 	}
-	
+
 	force->Init(); // --- initialize "force" member
 	if( tr->msd )
 		tr->Init(); //--- init "tracer"
@@ -273,7 +262,7 @@ void Fem::ApplyHOMO()
 		tr->tdisp[ isvab ] = 0.0;
 	for( int ipoin = 0; ipoin < node->npoin; ipoin++ )
 		node->dldis[ ipoin * domain->ndime ] = dGamma * ( node->coord[ ipoin ][ 1 ] - domain->ylo );
-	
+
 }
 //------------------------------------------------------
 void Fem::Verlet( double *output, double *v, double dtf, double dtv )
@@ -291,7 +280,7 @@ void Fem::Verlet( double *output, double *v, double dtf, double dtv )
         	                effForce[ idofn ] += node->fintl[ isvab ];
         	        isvab++;
         	}
-	}	
+	}
 	}
 	for( int isvab = 0; isvab < node->nsvab; isvab++ ){
 		dtfm = dtf / node->mass[ isvab / domain->ndime ];
